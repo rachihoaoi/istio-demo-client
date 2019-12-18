@@ -1,0 +1,56 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: istio-demo-client
+  labels:
+    version: v1
+    app: istio-demo-client
+    name: istio-demo-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: istio-demo-client
+      app: istio-demo-client
+      version: v1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        name: istio-demo-client
+        app: istio-demo-client
+        version: v1
+    spec:
+      containers:
+        - image: swr.cn-east-2.myhuaweicloud.com/yb7/istio-demo-client:rest-v1
+          imagePullPolicy: Always
+          name: istio-demo-client
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: INSTANCE_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: HOST
+#              value: http://10.247.70.180:5000
+              value: http://istio-demo-server.default.svc.cluster.local:5000
+#            - name: GRPC_HOST
+#              value: istio-demo-server.default.svc.cluster.local:5001
+#      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: default-secret
